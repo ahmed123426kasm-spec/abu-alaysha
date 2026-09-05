@@ -6,5 +6,8 @@
     "traces": {
       "enabled": true
     }
+  },
+  "ai": {
+    "binding": "AI"
   }
 }
