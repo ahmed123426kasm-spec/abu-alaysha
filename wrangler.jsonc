@@ -1,5 +1,10 @@
 {
   "name": "abu-alaysha",
   "main": "src/index.js",
-  "compatibility_date": "2026-09-05"
+  "compatibility_date": "2026-09-05",
+  "observability": {
+    "traces": {
+      "enabled": true
+    }
+  }
 }
