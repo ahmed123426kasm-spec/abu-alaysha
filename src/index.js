@@ -19,23 +19,31 @@ export default {
     }
 
     if (url.pathname === "/ai") {
-      const result = await env.AI.run(
-        "@cf/meta/llama-3.1-8b-instruct",
-        {
-          messages: [
-            {
-              role: "system",
-              content: "أنت الذكاء الاصطناعي الرئيسي لنظام أبو العيشة. ساعد في تحليل فرص البيع والشراء."
-            },
-            {
-              role: "user",
-              content: "عرّف نفسك باختصار."
-            }
-          ]
-        }
-      );
+      try {
+        const result = await env.AI.run(
+          "@cf/meta/llama-3.1-8b-instruct-fast",
+          {
+            messages: [
+              {
+                role: "system",
+                content:
+                  "أنت الذكاء الاصطناعي الرئيسي لنظام أبو العيشة. ساعد في تحليل فرص البيع والشراء وتحليل السوق والربح."
+              },
+              {
+                role: "user",
+                content: "عرّف نفسك باختصار."
+              }
+            ]
+          }
+        );
 
-      return Response.json(result);
+        return Response.json(result);
+      } catch (error) {
+        return Response.json({
+          error: "حدث خطأ في الذكاء الاصطناعي",
+          details: error.message
+        }, { status: 500 });
+      }
     }
 
     return Response.json({
