@@ -27,6 +27,20 @@ function getText(result) {
   return JSON.stringify(result);
 }
 
+function cleanHTML(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -139,9 +153,60 @@ ${profitText}`
       }
     }
 
-    return Response.json({
-      error: "المسار غير موجود",
-      available: ["/", "/agents", "/ai", "/task"]
-    }, { status: 404 });
-  }
-};
+    if (url.pathname === "/research") {
+      try {
+        const productURL = url.searchParams.get("url");
+
+        if (!productURL) {
+          return Response.json({
+            error: "أرسل رابط المنتج",
+            example: "/research?url=https://example.com/product"
+          }, { status: 400 });
+        }
+
+        const target = new URL(productURL);
+
+        const allowedDomains = [
+          "alibaba.com",
+          "aliexpress.com"
+        ];
+
+        const allowed = allowedDomains.some(
+          domain =>
+            target.hostname === domain ||
+            target.hostname.endsWith("." + domain)
+        );
+
+        if (!allowed) {
+          return Response.json({
+            error: "هذا الموقع غير مدعوم حالياً",
+            supported: allowedDomains
+          }, { status: 400 });
+        }
+
+        const response = await fetch(target.toString(), {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (compatible; AbuAlaysha/1.0)"
+          }
+        });
+
+        if (!response.ok) {
+          return Response.json({
+            error: "تعذر قراءة صفحة المنتج",
+            status: response.status
+          }, { status: 502 });
+        }
+
+        const html = await response.text();
+        const pageText = cleanHTML(html).slice(0, 18000);
+
+        const analysis = await askAI(
+          env,
+          `أنت محلل المنتجات في نظام أبو العيشة.
+حلل بيانات صفحة المنتج التي تم جلبها من الإنترنت.
+استخرج فقط المعلومات الموجودة فعلياً في النص.
+إذا لم تجد معلومة، اكتب "غير متوفر".
+لا تخترع أسعاراً أو أرقاماً.
+
+أخرج النتيجة بهذا الت
