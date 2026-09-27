@@ -209,4 +209,35 @@ ${profitText}`
 إذا لم تجد معلومة، اكتب "غير متوفر".
 لا تخترع أسعاراً أو أرقاماً.
 
-أخرج النتيجة بهذا الت
+أخرج النتيجة بهذا الترتيب:
+اسم المنتج:
+السعر:
+العملة:
+الوصف:
+الحد الأدنى للطلب:
+معلومات الشحن:
+معلومات إضافية:
+ما الذي يحتاج إلى تحقق:`,
+          pageText
+        );
+
+        return Response.json({
+          system: "أبو العيشة",
+          source: target.toString(),
+          fetched: true,
+          analysis: getText(analysis)
+        });
+      } catch (error) {
+        return Response.json({
+          error: "فشل البحث في صفحة المنتج",
+          details: error.message
+        }, { status: 500 });
+      }
+    }
+
+    return Response.json({
+      error: "المسار غير موجود",
+      available: ["/", "/agents", "/ai", "/task", "/research"]
+    }, { status: 404 });
+  }
+};
