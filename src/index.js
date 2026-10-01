@@ -201,6 +201,7 @@ ${profitText}`
 
         const html = await response.text();
         const pageText = cleanHTML(html).slice(0, 50000);
+if (url.searchParams.get("debug") === "1") return new Response(pageText);
         const analysis = await askAI(
           env,
           `أنت محلل المنتجات في نظام أبو العيشة.
