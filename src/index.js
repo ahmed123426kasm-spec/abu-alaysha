@@ -184,12 +184,13 @@ ${profitText}`
           }, { status: 400 });
         }
 
-        const response = await fetch(target.toString(), {
-          headers: {
-            "User-Agent":
-              "Mozilla/5.0 (compatible; AbuAlaysha/1.0)"
-          }
-        });
+        const readerURL = "https://r.jina.ai/" + target.toString();
+
+const response = await fetch(readerURL, {
+  headers: {
+    "Accept": "text/plain"
+  }
+});
 
         if (!response.ok) {
           return Response.json({
