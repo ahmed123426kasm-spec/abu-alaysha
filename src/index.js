@@ -267,29 +267,41 @@ if (url.searchParams.get("debug") === "1") return new Response(pageText);
       }
 
       try {
+                const prices = String(product.price || "");
+
+        const numbers = prices.match(/\d+(?:\.\d+)?/g) || [];
+
+        const cost = numbers.length
+          ? Math.min(...numbers.map(Number))
+          : null;
+
+        const analysis = {
+          cost_per_piece: cost,
+          suggested_selling_price: cost ? Math.round(cost * 2.5 * 1000) / 1000 : null,
+          estimated_profit: cost ? Math.round(cost * 1.5 * 1000) / 1000 : null,
+          margin_percent: cost ? 60 : null,
+          risk: product.sold && Number(product.sold) < 10
+            ? "المبيعات الحالية منخفضة وتحتاج اختبار الطلب"
+            : "غير متوفر",
+          test_needed: "اختبار الطلب وسعر البيع والشحن قبل شراء كمية كبيرة"
+        };
+
         const result = await askAI(
           env,
-          `أنت محلل المنتجات والربح في نظام أبو العيشة.
+          `أنت محلل المنتجات في نظام أبو العيشة.
 حلل بيانات المنتج المرسلة فقط.
-لا تخترع أي معلومة.
-إذا كانت معلومة ناقصة اكتب "غير متوفر".
+لا تخترع أي معلومات.
+استخدم الحسابات الموجودة في بيانات التحليل كما هي.
 
-أخرج النتيجة بهذا الترتيب:
+أخرج:
 اسم المنتج:
-السعر:
-العملة:
-الحد الأدنى للطلب:
-الشحن:
-المورد:
-التقييم:
-المبيعات:
-الوصف:
-تكلفة القطعة:
+التكلفة:
 سعر البيع المقترح:
 الربح التقريبي:
+هامش الربح:
 المخاطر:
 ما الذي يحتاج إلى اختبار:`,
-          JSON.stringify(product)
+          JSON.stringify({ product, analysis })
         );
 
         return Response.json({
