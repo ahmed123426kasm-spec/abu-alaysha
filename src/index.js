@@ -200,8 +200,7 @@ ${profitText}`
         }
 
         const html = await response.text();
-        const pageText = cleanHTML(html).slice(0, 18000);
-
+        const pageText = cleanHTML(html).slice(0, 50000);
         const analysis = await askAI(
           env,
           `أنت محلل المنتجات في نظام أبو العيشة.
