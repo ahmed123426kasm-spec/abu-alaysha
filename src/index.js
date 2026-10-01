@@ -304,7 +304,7 @@ if (
         system: "أبو العيشة",
         product,
         calculations: decision,
-        manager_decision: getText(manager)
+        manager_decision: managerDecision
       });
     }
     if (url.pathname === "/product") {
