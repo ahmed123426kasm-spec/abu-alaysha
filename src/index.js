@@ -185,8 +185,10 @@ ${profitText}`
         }
 
    const response = await fetch(target.toString(), {
+  redirect: "follow",
   headers: {
-    "User-Agent": "Mozilla/5.0"
+    "User-Agent": "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml"
   }
 });
 
