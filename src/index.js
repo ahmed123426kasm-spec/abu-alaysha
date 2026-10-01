@@ -310,6 +310,68 @@ if (url.searchParams.get("debug") === "1") return new Response(pageText);
         }, { status: 500 });
       }
     }
+    if (url.pathname === "/demand") {
+      const product = {
+        name: url.searchParams.get("name") || "",
+        cost: Number(url.searchParams.get("cost") || 0),
+        selling_price: Number(url.searchParams.get("selling_price") || 0),
+        sold: Number(url.searchParams.get("sold") || 0),
+        rating: Number(url.searchParams.get("rating") || 0),
+        reviews: Number(url.searchParams.get("reviews") || 0),
+        min_order: Number(url.searchParams.get("min_order") || 0)
+      };
+
+      if (!product.name) {
+        return Response.json({
+          system: "أبو العيشة",
+          message: "أرسل بيانات المنتج لاختبار الطلب",
+          fields: [
+            "name",
+            "cost",
+            "selling_price",
+            "sold",
+            "rating",
+            "reviews",
+            "min_order"
+          ]
+        });
+      }
+
+      const signals = {
+        sales_signal:
+          product.sold >= 100 ? "قوي" :
+          product.sold >= 20 ? "متوسط" :
+          "ضعيف",
+
+        rating_signal:
+          product.rating >= 4.5 ? "جيد جداً" :
+          product.rating >= 4 ? "جيد" :
+          "ضعيف",
+
+        review_signal:
+          product.reviews >= 100 ? "قوي" :
+          product.reviews >= 20 ? "متوسط" :
+          "ضعيف",
+
+        order_risk:
+          product.min_order <= 50 ? "منخفض" :
+          product.min_order <= 500 ? "متوسط" :
+          "مرتفع"
+      };
+
+      return Response.json({
+        system: "أبو العيشة",
+        product,
+        demand_test: signals,
+        decision:
+          product.sold >= 20 &&
+          product.rating >= 4 &&
+          product.reviews >= 20 &&
+          product.min_order <= 500
+            ? "يستحق اختبار البيع بكمية صغيرة"
+            : "لا تشتري كمية كبيرة قبل اختبار الطلب"
+      });
+    }
     return Response.json({
       error: "المسار غير موجود",
       available: ["/", "/agents", "/ai", "/task", "/research"]
