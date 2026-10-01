@@ -286,23 +286,17 @@ if (url.searchParams.get("debug") === "1") return new Response(pageText);
           test_needed: "اختبار الطلب وسعر البيع والشحن قبل شراء كمية كبيرة"
         };
 
-        const result = await askAI(
-          env,
-          `أنت محلل المنتجات في نظام أبو العيشة.
-حلل بيانات المنتج المرسلة فقط.
-لا تخترع أي معلومات.
-استخدم الحسابات الموجودة في بيانات التحليل كما هي.
-
-أخرج:
-اسم المنتج:
-التكلفة:
-سعر البيع المقترح:
-الربح التقريبي:
-هامش الربح:
-المخاطر:
-ما الذي يحتاج إلى اختبار:`,
-          JSON.stringify({ product, analysis })
-        );
+           const result = {
+          name: product.name,
+          cost_per_piece: cost,
+          suggested_selling_price: cost ? Math.round(cost * 2.5 * 1000) / 1000 : "غير متوفر",
+          estimated_profit: cost ? Math.round(cost * 1.5 * 1000) / 1000 : "غير متوفر",
+          margin_percent: cost ? 60 : "غير متوفر",
+          risk: product.sold && Number(product.sold) < 10
+            ? "المبيعات الحالية منخفضة وتحتاج اختبار الطلب"
+            : "غير متوفر",
+          test_needed: "اختبار الطلب وسعر البيع والشحن قبل شراء كمية كبيرة"
+        };
 
         return Response.json({
           system: "أبو العيشة",
