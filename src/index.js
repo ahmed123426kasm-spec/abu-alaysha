@@ -235,6 +235,65 @@ if (url.searchParams.get("debug") === "1") return new Response(pageText);
         }, { status: 500 });
       }
     }
+    if (url.pathname === "/decision") {
+      const product = {
+        name: url.searchParams.get("name") || "",
+        cost: Number(url.searchParams.get("cost") || 0),
+        selling_price: Number(url.searchParams.get("selling_price") || 0),
+        sold: Number(url.searchParams.get("sold") || 0),
+        rating: Number(url.searchParams.get("rating") || 0),
+        reviews: Number(url.searchParams.get("reviews") || 0),
+        min_order: Number(url.searchParams.get("min_order") || 0)
+      };
+
+      if (!product.name) {
+        return Response.json({
+          system: "أبو العيشة",
+          message: "أرسل بيانات المنتج لاتخاذ القرار",
+          fields: [
+            "name",
+            "cost",
+            "selling_price",
+            "sold",
+            "rating",
+            "reviews",
+            "min_order"
+          ]
+        });
+      }
+
+      const profit = product.selling_price - product.cost;
+
+      const decision = {
+        product: product.name,
+        cost: product.cost,
+        selling_price: product.selling_price,
+        estimated_profit: Math.round(profit * 1000) / 1000,
+        demand:
+          product.sold >= 20 &&
+          product.rating >= 4 &&
+          product.reviews >= 20
+            ? "إشارات الطلب جيدة"
+            : "الطلب يحتاج اختبار",
+        order_risk:
+          product.min_order <= 50 ? "منخفض" :
+          product.min_order <= 500 ? "متوسط" :
+          "مرتفع"
+      };
+
+      const manager = await askAI(
+        env,
+        "أنت المدير الرئيسي لأبو العيشة. اتخذ قراراً بناءً على البيانات الحقيقية المرسلة فقط. لا تخترع أي معلومات. لا توصي بشراء كمية كبيرة إذا كان الطلب غير مثبت. فرّق بين الاختبار والشراء.",
+        JSON.stringify(decision)
+      );
+
+      return Response.json({
+        system: "أبو العيشة",
+        product,
+        calculations: decision,
+        manager_decision: getText(manager)
+      });
+    }
     if (url.pathname === "/product") {
       const product = {
         name: url.searchParams.get("name") || "",
