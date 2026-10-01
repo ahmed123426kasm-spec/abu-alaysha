@@ -235,7 +235,75 @@ if (url.searchParams.get("debug") === "1") return new Response(pageText);
         }, { status: 500 });
       }
     }
+    if (url.pathname === "/product") {
+      const product = {
+        name: url.searchParams.get("name") || "",
+        price: url.searchParams.get("price") || "",
+        currency: url.searchParams.get("currency") || "",
+        min_order: url.searchParams.get("min_order") || "",
+        shipping: url.searchParams.get("shipping") || "",
+        supplier: url.searchParams.get("supplier") || "",
+        rating: url.searchParams.get("rating") || "",
+        sold: url.searchParams.get("sold") || "",
+        description: url.searchParams.get("description") || ""
+      };
 
+      if (!product.name) {
+        return Response.json({
+          system: "أبو العيشة",
+          message: "أرسل بيانات المنتج",
+          fields: [
+            "name",
+            "price",
+            "currency",
+            "min_order",
+            "shipping",
+            "supplier",
+            "rating",
+            "sold",
+            "description"
+          ]
+        });
+      }
+
+      try {
+        const result = await askAI(
+          env,
+          `أنت محلل المنتجات والربح في نظام أبو العيشة.
+حلل بيانات المنتج المرسلة فقط.
+لا تخترع أي معلومة.
+إذا كانت معلومة ناقصة اكتب "غير متوفر".
+
+أخرج النتيجة بهذا الترتيب:
+اسم المنتج:
+السعر:
+العملة:
+الحد الأدنى للطلب:
+الشحن:
+المورد:
+التقييم:
+المبيعات:
+الوصف:
+تكلفة القطعة:
+سعر البيع المقترح:
+الربح التقريبي:
+المخاطر:
+ما الذي يحتاج إلى اختبار:`,
+          JSON.stringify(product)
+        );
+
+        return Response.json({
+          system: "أبو العيشة",
+          product,
+          analysis: getText(result)
+        });
+      } catch (error) {
+        return Response.json({
+          error: "فشل تحليل المنتج",
+          details: error.message
+        }, { status: 500 });
+      }
+    }
     return Response.json({
       error: "المسار غير موجود",
       available: ["/", "/agents", "/ai", "/task", "/research"]
