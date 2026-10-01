@@ -272,7 +272,7 @@ if (url.searchParams.get("debug") === "1") return new Response(pageText);
         const numbers = prices.match(/\d+(?:\.\d+)?/g) || [];
 
         const cost = numbers.length
-          ? Math.min(...numbers.map(Number))
+          ? Number(numbers[0])
           : null;
 
         const analysis = {
