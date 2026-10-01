@@ -280,11 +280,25 @@ if (url.searchParams.get("debug") === "1") return new Response(pageText);
           "مرتفع"
       };
 
-      const manager = await askAI(
-        env,
-        "أنت المدير الرئيسي لأبو العيشة. اتخذ قراراً بناءً على البيانات الحقيقية المرسلة فقط. لا تخترع أي معلومات. لا توصي بشراء كمية كبيرة إذا كان الطلب غير مثبت. فرّق بين الاختبار والشراء.",
-        JSON.stringify(decision)
-      );
+      let managerDecision;
+
+if (
+  product.sold >= 20 &&
+  product.rating >= 4 &&
+  product.reviews >= 20 &&
+  product.min_order <= 50 &&
+  profit > 0
+) {
+  managerDecision = "اختبر كمية صغيرة";
+} else if (
+  profit <= 0 ||
+  product.rating < 4 ||
+  product.reviews < 20
+) {
+  managerDecision = "ارفض المنتج";
+} else {
+  managerDecision = "اختبر كمية صغيرة";
+}
 
       return Response.json({
         system: "أبو العيشة",
