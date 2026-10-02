@@ -241,11 +241,12 @@ if (url.pathname === "/discover") {
       "smart glasses";
 
     const searchQuery =
-      "site:alibaba.com " + query;
+      `site:alibaba.com/product-detail "${query}"`;
 
     const searchURL =
-  "https://html.duckduckgo.com/html/?q=" +
-  encodeURIComponent(searchQuery);
+      "https://www.bing.com/search?q=" +
+      encodeURIComponent(searchQuery);
+
     const response = await fetch(searchURL, {
       redirect: "follow",
       headers: {
@@ -265,65 +266,25 @@ if (url.pathname === "/discover") {
 
     const html = await response.text();
 
-    const pageText = html.slice(0, 50000);
-    
-const alibabaLinks = [...html.matchAll(/uddg=([^&"']+)/gi)]
-  .map(match => {
-    try {
-      return decodeURIComponent(match[1]);
-    } catch {
-      return match[1];
-    }
-  })
-  .map(link => link.replace(/^https?:\/\/duckduckgo\.com\/l\/\?uddg=/, ""))
-  .filter(link => /(?:^|\/\/)(?:www\.)?alibaba\.com/i.test(link))
-  .filter((link, index, arr) => arr.indexOf(link) === index)
-  .slice(0, 20);
+    const alibabaLinks = [
+      ...html.matchAll(
+        /href="(https?:\/\/(?:www\.)?alibaba\.com\/product-detail\/[^"]+)"/gi
+      )
+    ]
+      .map(match => match[1])
+      .map(link => link.replace(/&amp;/g, "&"))
+      .filter((link, index, arr) =>
+        arr.indexOf(link) === index
+      )
+      .slice(0, 20);
 
-const result = await askAI(
-  env,
-  `أنت وكيل اكتشاف المنتجات في نظام أبو العيشة.
-
-لديك روابط حقيقية استخرجها النظام من نتائج بحث الويب.
-
-حلل الروابط وحدد فقط روابط صفحات المنتجات الفردية في Alibaba.
-
-استبعد:
-- صفحات التصنيفات.
-- صفحات البحث.
-- صفحات الشركات والموردين.
-- الصفحة الرئيسية لـ Alibaba.
-
-لا تخترع أي رابط.
-
-إذا وجدت صفحة منتج فردية، أخرج:
-اسم المنتج:
-رابط المنتج:
-نوع الرابط: منتج فردي
-
-إذا لم تجد أي صفحة منتج فردية، اكتب:
-لا يوجد منتج فردي.
-
-روابط Alibaba المستخرجة:
-${alibabaLinks.join("\n")}`,
-  "حلل الروابط أعلاه."
-);
-
-return Response.json({
-  system: "أبو العيشة",
-  search: query,
-  search_engine: "DuckDuckGo",
-  fetched: true,
-  links_found: alibabaLinks.length,
-  links: alibabaLinks,
-  discoveries: getText(result)
-});
     return Response.json({
       system: "أبو العيشة",
       search: query,
-      search_engine: "DuckDuckGo",
+      search_engine: "Bing",
       fetched: true,
-      discoveries: getText(result)
+      links_found: alibabaLinks.length,
+      links: alibabaLinks
     });
 
   } catch (error) {
