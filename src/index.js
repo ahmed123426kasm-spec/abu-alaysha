@@ -268,36 +268,57 @@ if (url.pathname === "/discover") {
 
     const pageText = html.slice(0, 50000);
 
-    const result = await askAI(
+    
+const alibabaLinks = [...html.matchAll(/href=["']([^"']*alibaba\.com[^"']*)["']/gi)]
+  .map(match => match[1])
+  .map(link => {
+    try {
+      return decodeURIComponent(link);
+    } catch {
+      return link;
+    }
+  })
+  .filter((link, index, arr) => arr.indexOf(link) === index)
+  .slice(0, 20);
+
+const result = await askAI(
   env,
   `أنت وكيل اكتشاف المنتجات في نظام أبو العيشة.
 
-حلل نتائج البحث المأخوذة من محرك بحث الويب.
+لديك روابط حقيقية استخرجها النظام من نتائج بحث الويب.
 
-استخرج فقط منتجات Alibaba الموجودة فعلياً في النص.
+حلل الروابط وحدد فقط روابط صفحات المنتجات الفردية في Alibaba.
 
-مهم جداً:
-- استبعد صفحات التصنيفات مثل /category/
-- استبعد صفحات الموردين مثل /en.alibaba.com أو /zh_CN/
-- لا تعتبر صفحة الشركة أو المتجر منتجاً.
-- اقبل فقط رابطاً يبدو أنه صفحة منتج فردية.
-- لا تخترع أي رابط.
-- لا تخترع السعر أو العملة أو اسم المورد.
-- إذا لم تجد منتجاً فردياً حقيقياً، اكتب "لا يوجد منتج فردي".
+استبعد:
+- صفحات التصنيفات.
+- صفحات البحث.
+- صفحات الشركات والموردين.
+- الصفحة الرئيسية لـ Alibaba.
 
-لكل منتج أخرج:
+لا تخترع أي رابط.
 
+إذا وجدت صفحة منتج فردية، أخرج:
 اسم المنتج:
-رابط المنتج المباشر:
-السعر:
-العملة:
-المورد:
-معلومات إضافية:
+رابط المنتج:
+نوع الرابط: منتج فردي
 
-اعرض أفضل 5 منتجات فردية فقط.`,
-  pageText
+إذا لم تجد أي صفحة منتج فردية، اكتب:
+لا يوجد منتج فردي.
+
+روابط Alibaba المستخرجة:
+${alibabaLinks.join("\n")}`,
+  "حلل الروابط أعلاه."
 );
 
+return Response.json({
+  system: "أبو العيشة",
+  search: query,
+  search_engine: "DuckDuckGo",
+  fetched: true,
+  links_found: alibabaLinks.length,
+  links: alibabaLinks,
+  discoveries: getText(result)
+});
     return Response.json({
       system: "أبو العيشة",
       search: query,
