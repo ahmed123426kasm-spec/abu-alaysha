@@ -240,9 +240,12 @@ if (url.pathname === "/discover") {
       url.searchParams.get("q") ||
       "smart glasses";
 
+    const searchQuery =
+      "site:alibaba.com " + query;
+
     const searchURL =
-      "https://www.alibaba.com/trade/search?SearchText=" +
-      encodeURIComponent(query);
+      "https://html.duckduckgo.com/html/?q=" +
+      encodeURIComponent(searchQuery);
 
     const response = await fetch(searchURL, {
       redirect: "follow",
@@ -256,31 +259,31 @@ if (url.pathname === "/discover") {
 
     if (!response.ok) {
       return Response.json({
-        error: "تعذر الوصول إلى Alibaba",
+        error: "تعذر الوصول إلى محرك البحث",
         status: response.status
       }, { status: 502 });
     }
 
     const html = await response.text();
+
     const pageText = cleanHTML(html).slice(0, 50000);
 
     const result = await askAI(
       env,
       `أنت وكيل اكتشاف المنتجات في نظام أبو العيشة.
 
-حلل النص المأخوذ مباشرة من نتائج بحث Alibaba.
+حلل نتائج البحث المأخوذة من محرك بحث الويب.
 
-استخرج المنتجات الموجودة فعلياً في النص فقط.
-لا تخترع أي منتج أو سعر أو عدد مبيعات.
+استخرج فقط منتجات Alibaba الموجودة فعلياً في النص.
+لا تخترع منتجات أو أسعاراً أو أرقام مبيعات.
 
 لكل منتج حاول استخراج:
 اسم المنتج:
+رابط المنتج:
 السعر:
 العملة:
-معلومات الشحن:
 المورد:
-التقييم:
-المبيعات:
+معلومات إضافية:
 
 إذا لم تجد معلومة اكتب "غير متوفر".
 
@@ -291,14 +294,14 @@ if (url.pathname === "/discover") {
     return Response.json({
       system: "أبو العيشة",
       search: query,
-      source: searchURL,
+      search_engine: "DuckDuckGo",
       fetched: true,
       discoveries: getText(result)
     });
 
   } catch (error) {
     return Response.json({
-      error: "فشل اكتشاف المنتجات",
+      error: "فشل البحث عن المنتجات",
       details: error.message
     }, { status: 500 });
   }
