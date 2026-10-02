@@ -234,6 +234,38 @@ if (url.searchParams.get("debug") === "1") return new Response(pageText);
         }, { status: 500 });
       }
     }
+if (url.pathname === "/discover") {
+  try {
+    const query =
+      url.searchParams.get("q") ||
+      "منتجات صغيرة ورخيصة وسهلة البيع";
+
+    const result = await askAI(
+      env,
+      `أنت وكيل اكتشاف المنتجات في نظام أبو العيشة.
+اقترح 5 منتجات حقيقية قابلة للبيع.
+ركز على منتجات صغيرة، خفيفة، منخفضة التكلفة، وسهلة الشحن.
+لكل منتج اذكر:
+اسم المنتج:
+سبب فرصة البيع:
+نوع الزبون:
+ما الذي يجب التحقق منه:
+مهم: لا تخترع أسعاراً أو أرقام مبيعات.`,
+      query
+    );
+
+    return Response.json({
+      system: "أبو العيشة",
+      search: query,
+      discoveries: getText(result)
+    });
+  } catch (error) {
+    return Response.json({
+      error: "فشل اكتشاف المنتجات",
+      details: error.message
+    }, { status: 500 });
+  }
+}
     if (url.pathname === "/decision") {
       const product = {
         name: url.searchParams.get("name") || "",
