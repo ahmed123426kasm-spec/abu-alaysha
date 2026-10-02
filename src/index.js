@@ -267,15 +267,16 @@ if (url.pathname === "/discover") {
 
     const pageText = html.slice(0, 50000);
     
-const alibabaLinks = [...html.matchAll(/href=["']([^"']*alibaba\.com[^"']*)["']/gi)]
-  .map(match => match[1])
-  .map(link => {
+const alibabaLinks = [...html.matchAll(/uddg=([^&"']+)/gi)]
+  .map(match => {
     try {
-      return decodeURIComponent(link);
+      return decodeURIComponent(match[1]);
     } catch {
-      return link;
+      return match[1];
     }
   })
+  .map(link => link.replace(/^https?:\/\/duckduckgo\.com\/l\/\?uddg=/, ""))
+  .filter(link => /(?:^|\/\/)(?:www\.)?alibaba\.com/i.test(link))
   .filter((link, index, arr) => arr.indexOf(link) === index)
   .slice(0, 20);
 
