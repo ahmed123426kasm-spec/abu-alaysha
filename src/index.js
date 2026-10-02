@@ -266,7 +266,7 @@ if (url.pathname === "/discover") {
 
     const html = await response.text();
 
-    const pageText = cleanHTML(html).slice(0, 50000);
+    const pageText = html.slice(0, 50000);
 
     const result = await askAI(
   env,
