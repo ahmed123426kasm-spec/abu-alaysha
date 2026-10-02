@@ -238,27 +238,64 @@ if (url.pathname === "/discover") {
   try {
     const query =
       url.searchParams.get("q") ||
-      "منتجات صغيرة ورخيصة وسهلة البيع";
+      "smart glasses";
+
+    const searchURL =
+      "https://www.alibaba.com/trade/search?SearchText=" +
+      encodeURIComponent(query);
+
+    const response = await fetch(searchURL, {
+      redirect: "follow",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36",
+        "Accept":
+          "text/html,application/xhtml+xml"
+      }
+    });
+
+    if (!response.ok) {
+      return Response.json({
+        error: "تعذر الوصول إلى Alibaba",
+        status: response.status
+      }, { status: 502 });
+    }
+
+    const html = await response.text();
+    const pageText = cleanHTML(html).slice(0, 50000);
 
     const result = await askAI(
       env,
       `أنت وكيل اكتشاف المنتجات في نظام أبو العيشة.
-اقترح 5 منتجات حقيقية قابلة للبيع.
-ركز على منتجات صغيرة، خفيفة، منخفضة التكلفة، وسهلة الشحن.
-لكل منتج اذكر:
+
+حلل النص المأخوذ مباشرة من نتائج بحث Alibaba.
+
+استخرج المنتجات الموجودة فعلياً في النص فقط.
+لا تخترع أي منتج أو سعر أو عدد مبيعات.
+
+لكل منتج حاول استخراج:
 اسم المنتج:
-سبب فرصة البيع:
-نوع الزبون:
-ما الذي يجب التحقق منه:
-مهم: لا تخترع أسعاراً أو أرقام مبيعات.`,
-      query
+السعر:
+العملة:
+معلومات الشحن:
+المورد:
+التقييم:
+المبيعات:
+
+إذا لم تجد معلومة اكتب "غير متوفر".
+
+اعرض أفضل 5 منتجات فقط.`,
+      pageText
     );
 
     return Response.json({
       system: "أبو العيشة",
       search: query,
+      source: searchURL,
+      fetched: true,
       discoveries: getText(result)
     });
+
   } catch (error) {
     return Response.json({
       error: "فشل اكتشاف المنتجات",
