@@ -244,9 +244,8 @@ if (url.pathname === "/discover") {
       "site:alibaba.com " + query;
 
     const searchURL =
-      "https://html.duckduckgo.com/html/?q=" +
-      encodeURIComponent(searchQuery);
-
+  "https://html.duckduckgo.com/html/?q=" +
+  encodeURIComponent(searchQuery);
     const response = await fetch(searchURL, {
       redirect: "follow",
       headers: {
