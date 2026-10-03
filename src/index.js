@@ -241,56 +241,81 @@ if (url.pathname === "/discover") {
       url.searchParams.get("q") ||
       "smart glasses";
 
-    const searchQuery =
-      `site:alibaba.com/product-detail "${query}"`;
-
-    const searchURL =
-      "https://www.bing.com/search?q=" +
-      encodeURIComponent(searchQuery);
-
-    const response = await fetch(searchURL, {
-      redirect: "follow",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36",
-        "Accept":
-          "text/html,application/xhtml+xml"
+    const sources = [
+      {
+        name: "Alibaba",
+        domain: "alibaba.com"
+      },
+      {
+        name: "Made-in-China",
+        domain: "made-in-china.com"
+      },
+      {
+        name: "AliExpress",
+        domain: "aliexpress.com"
       }
-    });
+    ];
 
-    if (!response.ok) {
-      return Response.json({
-        error: "تعذر الوصول إلى محرك البحث",
-        status: response.status
-      }, { status: 502 });
+    const results = [];
+
+    for (const source of sources) {
+      const searchURL =
+        "https://www.google.com/search?q=" +
+        encodeURIComponent(
+          `site:${source.domain} ${query}`
+        );
+
+      const response = await fetch(searchURL, {
+        redirect: "follow",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36",
+          "Accept":
+            "text/html,application/xhtml+xml"
+        }
+      });
+
+      if (!response.ok) continue;
+
+      const html = await response.text();
+
+      const links = [
+        ...html.matchAll(
+          /href="(https?:\/\/[^"]+)"/gi
+        )
+      ]
+        .map(match => match[1])
+        .map(link => {
+          try {
+            return decodeURIComponent(link);
+          } catch {
+            return link;
+          }
+        })
+        .filter(link =>
+          link.includes(source.domain)
+        )
+        .filter((link, index, arr) =>
+          arr.indexOf(link) === index
+        )
+        .slice(0, 10);
+
+      results.push({
+        source: source.name,
+        links
+      });
     }
-
-    const html = await response.text();
-
-    const alibabaLinks = [
-      ...html.matchAll(
-        /href="(https?:\/\/(?:www\.)?alibaba\.com\/product-detail\/[^"]+)"/gi
-      )
-    ]
-      .map(match => match[1])
-      .map(link => link.replace(/&amp;/g, "&"))
-      .filter((link, index, arr) =>
-        arr.indexOf(link) === index
-      )
-      .slice(0, 20);
 
     return Response.json({
       system: "أبو العيشة",
       search: query,
-      search_engine: "Bing",
-      fetched: true,
-      links_found: alibabaLinks.length,
-      links: alibabaLinks
+      sources_checked: sources.length,
+      results
     });
 
   } catch (error) {
     return Response.json({
-      error: "فشل البحث عن المنتجات",
+      error: "فشل البحث التلقائي",
       details: error.message
     }, { status: 500 });
   }
