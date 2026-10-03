@@ -241,80 +241,75 @@ if (url.pathname === "/discover") {
       url.searchParams.get("q") ||
       "smart glasses";
 
-    const sources = [
-      {
-        name: "Alibaba",
-        domain: "alibaba.com"
-      },
-      {
-        name: "Made-in-China",
-        domain: "made-in-china.com"
-      },
-      {
-        name: "AliExpress",
-        domain: "aliexpress.com"
+    const searchURL =
+      "https://www.made-in-china.com/productdirectory.do" +
+      "?subaction=hunt" +
+      "&style=b" +
+      "&mode=and" +
+      "&code=0" +
+      "&comProvince=nolimit" +
+      "&order=0" +
+      "&isOpenCorrection=1" +
+      "&word=" +
+      encodeURIComponent(query);
+
+    const response = await fetch(searchURL, {
+      redirect: "follow",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36",
+        "Accept":
+          "text/html,application/xhtml+xml"
       }
-    ];
+    });
 
-    const results = [];
-
-    for (const source of sources) {
-      const searchURL =
-        "https://html.duckduckgo.com/html/?q=" +
-        encodeURIComponent(
-          `site:${source.domain} ${query}`
-        );
-
-      const response = await fetch(searchURL, {
-        redirect: "follow",
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36",
-          "Accept":
-            "text/html,application/xhtml+xml"
-        }
-      });
-
-      if (!response.ok) continue;
-
-      const html = await response.text();
-
-      const links = [
-        ...html.matchAll(
-          /href="(https?:\/\/[^"]+)"/gi
-        )
-      ]
-        .map(match => match[1])
-        .map(link => {
-          try {
-            return decodeURIComponent(link);
-          } catch {
-            return link;
-          }
-        })
-        .filter(link =>
-          link.includes(source.domain)
-        )
-        .filter((link, index, arr) =>
-          arr.indexOf(link) === index
-        )
-        .slice(0, 10);
-
-      results.push({
-        source: source.name,
-        links
-      });
+    if (!response.ok) {
+      return Response.json({
+        system: "أبو العيشة",
+        error: "تعذر الوصول إلى بحث Made-in-China",
+        status: response.status
+      }, { status: 502 });
     }
+
+    const html = await response.text();
+
+    const productLinks = [
+      ...html.matchAll(
+        /href=["'](https?:\/\/(?:www\.)?made-in-china\.com\/[^"'<>]+\.html)["']/gi
+      )
+    ]
+      .map(match => match[1])
+      .map(link => link.replace(/&amp;/g, "&"))
+      .filter(link =>
+        !/\/products-search\//i.test(link)
+      )
+      .filter(link =>
+        !/\/aboutus\//i.test(link)
+      )
+      .filter(link =>
+        !/\/companysearch/i.test(link)
+      )
+      .filter((link, index, arr) =>
+        arr.indexOf(link) === index
+      )
+      .slice(0, 10);
 
     return Response.json({
       system: "أبو العيشة",
+      source: "Made-in-China",
       search: query,
-      sources_checked: sources.length,
-      results
+      search_url: searchURL,
+      fetched: true,
+      products_found: productLinks.length,
+      products: productLinks.map((link, index) => ({
+        number: index + 1,
+        url: link
+      }))
     });
 
   } catch (error) {
     return Response.json({
+      system: "أبو العيشة",
       error: "فشل البحث التلقائي",
       details: error.message
     }, { status: 500 });
