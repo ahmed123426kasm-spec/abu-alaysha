@@ -260,7 +260,7 @@ if (url.pathname === "/discover") {
 
     for (const source of sources) {
       const searchURL =
-        "https://www.google.com/search?q=" +
+        "https://html.duckduckgo.com/html/?q=" +
         encodeURIComponent(
           `site:${source.domain} ${query}`
         );
