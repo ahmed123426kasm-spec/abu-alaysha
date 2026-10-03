@@ -166,9 +166,10 @@ ${profitText}`
         const target = new URL(productURL);
 
         const allowedDomains = [
-          "alibaba.com",
-          "aliexpress.com"
-        ];
+  "alibaba.com",
+  "aliexpress.com",
+  "made-in-china.com"
+];
 
         const allowed = allowedDomains.some(
           domain =>
